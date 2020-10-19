@@ -1,47 +1,56 @@
 #!/usr/bin/python
 from socket import *
+import string
+import random
+
 serverName = '127.0.0.1'
 serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
-response1 = clientSocket.recv(2048)
-print(response1.decode())
-print("1.CAPABILITY   	2.LOGIN    3.NOOP    4.LOGOUT	5.CREATE	6.DELETE	7.RENAME	8.SELECT	9.EXAMINE	10.STATUS	11.CHECK	12.CLOSE")
+response = clientSocket.recv(2048)
+print(response.decode())
+print("1.CAPABILITY   2.LOGIN   3.NOOP   4.LOGOUT   5.CREATE   6.DELETE   7.RENAME   8.SELECT   9.EXAMINE   10.STATUS   11.CHECK   12.CLOSE")
+
+def get_alphanumeric_string():
+	opt = string.ascii_letters + string.digits
+	alphanumeric_string = ''.join((random.choice(opt) for i in range(6)))
+	return alphanumeric_string
+
 def capability():
-	command = "a001 CAPABILITY\r\n"
+	command = "CAPABILITY\r\n"
 	return command
 
 def login():
 	username = input("Username: ")
 	passwd = input("Password: ")
-	command = "a002 LOGIN " + username + " " + passwd + "\r\n" 
+	command = "LOGIN " + username + " " + passwd + "\r\n" 
 	return command
 
 def noop():
-	command = "a003 NOOP\r\n"
+	command = "NOOP\r\n"
 	return command
 
 def logout():
-	command = "a004 LOGOUT\r\n"
+	command = "LOGOUT\r\n"
 	return command
 	
 def create(mailbox):
-	command = "a005 CREATE " + mailbox + '\r\n'
+	command = "CREATE " + mailbox + '\r\n'
 	return command
 
 def delete(mailbox):
-	command = "a006 DELETE " + mailbox + '\r\n'
+	command = "DELETE " + mailbox + '\r\n'
 	return command
 
 def rename(mailbox, new_name):
-	command = "a007 RENAME " + mailbox + " " + new_name + '\r\n'
+	command = "RENAME " + mailbox + " " + new_name + '\r\n'
 	return command
 
 def select(mailbox):
-	command = "a008 SELECT " + mailbox + '\r\n'
+	command = "SELECT " + mailbox + '\r\n'
 	return command
 
 def examine(mailbox):
-	command = "a009 EXAMINE " + mailbox + '\r\n'
+	command = "EXAMINE " + mailbox + '\r\n'
 	return command
 
 def status(mailbox, data_item_names):
@@ -50,11 +59,11 @@ def status(mailbox, data_item_names):
 	return command
 
 def check():
-	command = "a011 CHECK\r\n"
+	command = "CHECK\r\n"
 	return command
 
 def close():
-	command = "a012 CLOSE\r\n"
+	command = "CLOSE\r\n"
 	return command
 
 
@@ -94,6 +103,8 @@ while True:
 	elif choice == 12:
 		command = close()
 
+	alp_num_string = get_alphanumeric_string()
+	command = alp_num_string + " " + command
 	clientSocket.sendall(command.encode())
 	serverResponse = clientSocket.recv(2048)
 	print(serverResponse.decode().strip())
