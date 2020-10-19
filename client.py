@@ -5,7 +5,7 @@ serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
 response1 = clientSocket.recv(2048)
 print(response1.decode())
-print("1.CAPABILITY    2.LOGIN    3.NOOP    4.LOGOUT	5.CREATE	6.DELETE	7.REMANE	8.SELECT	9.EXAMINE	10.STATUS	11.CHECK	12.CLOSE")
+print("1.CAPABILITY   	2.LOGIN    3.NOOP    4.LOGOUT	5.CREATE	6.DELETE	7.RENAME	8.SELECT	9.EXAMINE	10.STATUS	11.CHECK	12.CLOSE")
 def capability():
 	command = "a001 CAPABILITY\r\n"
 	return command
@@ -58,7 +58,6 @@ def close():
 	return command
 
 
-	
 
 while True:
 	choice = int(input())
