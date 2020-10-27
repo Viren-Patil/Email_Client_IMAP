@@ -8,7 +8,7 @@ serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
 response = clientSocket.recv(2048)
 print(response.decode())
-print("1.CAPABILITY   2.LOGIN   3.NOOP   4.LOGOUT   5.CREATE   6.DELETE   7.RENAME   8.SELECT   9.EXAMINE   10.STATUS   11.CHECK   12.CLOSE")
+print("1.CAPABILITY   2.LOGIN   3.NOOP   4.LOGOUT   5.CREATE   6.DELETE   7.RENAME   8.SELECT   9.EXAMINE   10.STATUS   11.CHECK   12.CLOSE	13.READING	14.EXPUNGE")
 
 def get_alphanumeric_string():
 	opt = string.ascii_letters + string.digits
@@ -53,10 +53,6 @@ def examine(mailbox):
 	command = "EXAMINE " + mailbox + '\r\n'
 	return command
 
-def status(mailbox, data_item_names):
-	command = "a010 STATUS " + mailbox + " (" + data_item_names + ')\r\n'
-	#STATUS name_of_mailbox UIDNEXT MESSAGES
-	return command
 
 def check():
 	command = "CHECK\r\n"
@@ -66,8 +62,20 @@ def close():
 	command = "CLOSE\r\n"
 	return command
 
+def read_complete_mail(uid):
+	command = "FETCH " + str(uid) + ":" + str(uid) + " rfc822\r\n"
+	return command
 
-
+def read_header_mail(mail_no):
+	command = "FETCH " + str(uid) + ":" + str(uid) + " rfc822.header\r\n"
+	return command
+	
+def read_size_mail(mail_no):
+	command = "FETCH " + str(uid) + ":" + str(uid) + " rfc822.size\r\n"
+	return command
+	
+def expunge():
+	return "EXPUNGE"
 while True:
 	choice = int(input())
 	if choice == 1:
@@ -96,12 +104,38 @@ while True:
 		command = examine(mailbox)
 	elif choice == 10:
 		mailbox = input("Name of mailbox: ")
-		data_item_names = input("Data item names: ")
-		command = status(mailbox, data_item_names)
+		subchoice = int(input("101.MESSAGES	102.RECENT	103.UIDNEXT	104.UIDVALIDITY		105.UNSEEN: "))
+		if subchoice == 101:
+		#no of messages in the mailbox
+			command = "STATUS " + mailbox + " (MESSAGES)\r\n"
+		elif subchoice == 102:
+		#no of messages with recent flag set
+			command = "STATUS " + mailbox + " (RECENT)\r\n"
+		elif subchoice == 103:
+		#next unique identifier of the mailbox
+			command = "STATUS " + mailbox + " (UIDNEXT)\r\n"
+		elif subchoice == 104:
+		#unique identifier value of the mailbox
+			command = "STATUS " + mailbox + " (UIDVALIDITY)\r\n"
+		elif subchoice == 105:
+		#no of messages which do not have seen flag set
+			command = "STATUS " + mailbox + " (UNSEEN)\r\n"
+			
 	elif choice == 11:
 		command = check()
 	elif choice == 12:
 		command = close()
+	elif choice == 13:
+		subchoice = int(input("101.HEADER	102.SIZE		103.COMPLETE MESSAGE"))
+		uid = int(input("uid of mail: "))
+		if subchoice == 101:
+			command = read_header_mail(uid)
+		elif subchoice == 102:
+			command = read_size_mail(uid)
+		elif subchoice == 103:
+			command = read_complete_mail(uid)
+	elif choice == 14:
+		command = expunge()
 
 	alp_num_string = get_alphanumeric_string()
 	command = alp_num_string + " " + command
