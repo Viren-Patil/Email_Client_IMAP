@@ -1,6 +1,6 @@
 # Email_Client_IMAP
 
-python client.py
+python3 client.py
 
 Some guidelines regarding the usage of commands:
 
