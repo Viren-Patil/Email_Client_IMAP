@@ -14,4 +14,4 @@ Some guidelines regarding the usage of commands:
       SELECT    EXAMINE   CREATE    DELETE    RENAME    STATUS
  
 4. Commands valid in selected state are - 
-      CHECK     CLOSE     EXPUNGE   READ     COPY
+      CHECK     CLOSE     EXPUNGE   READ      COPY      STORE
