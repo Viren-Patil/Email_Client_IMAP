@@ -19,10 +19,19 @@ while True:
 
 	elif choice == 2:
 		command = login()
-
+		response = executeCommand(clientSocket, command)
+		temp = response.split(" ")
+		if temp[1] == "OK":
+			print("Login Successful!")
+		elif temp[1] == "NO":
+			print("Invalid User or Password!")
+		else:
+			print("Try again!")
+		continue
+	'''
 	elif choice == 3:
 		command = noop()
-
+	'''
 	elif choice == 4:
 		command = logout()
 
@@ -73,14 +82,43 @@ while True:
 		command = close()
 
 	elif choice == 13:
-		subchoice = int(input("101.HEADER\t102.SIZE\t103.COMPLETE MESSAGE: "))
 		uid = int(input("uid of mail: "))
+		'''
 		if subchoice == 101:
 			command = read_header_mail(uid)
 		elif subchoice == 102:
 			command = read_size_mail(uid)
 		elif subchoice == 103:
 			command = read_complete_mail(uid)
+		'''
+		command = read_complete_mail(uid)
+		x = executeCommand(clientSocket, command)
+		l = x.split("\n")
+		length = len(l)
+		if str(l[7])[:2] == "To":
+			To = str(l[7])
+		if str(l[8])[:3] == "Cc":
+			From = str(l[9])
+			Subject = str(l[10])
+			Cc = str(l[8])
+			Date = str(l[12])
+			Message = (l[20:length - 3])
+		else:
+			From = str(l[8])
+			Subject = str(l[9])
+			Date = str(l[11])
+			Message = l[19: length - 3]
+			message = ""
+		for i in Message:
+			message += i
+		temp = message.split('\r')
+		t = len(temp)
+		Message = ""
+		for m in range(t - 1):
+			Message += temp[m] + '\n'
+		command = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n' + Message + '\n'	
+		print(command)
+		continue
 	elif choice == 14:
 		command = expunge()
 
@@ -88,11 +126,11 @@ while True:
 		uid = int(input("uid of mail to be deleted: "))
 		command = store(uid)
 
-	executeCommand(clientSocket, command)
+	print(executeCommand(clientSocket, command))
 
 	if(choice == 15):
 		command = expunge()
-		executeCommand(clientSocket, command)
+		print(executeCommand(clientSocket, command))
 
 	if(choice == 4):
 		print("Connection closed by foreign host.")

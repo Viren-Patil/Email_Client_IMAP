@@ -77,4 +77,4 @@ def executeCommand(clientSocket, command):
     command = alp_num_string + " " + command
     clientSocket.sendall(command.encode())
     serverResponse = clientSocket.recv(2048)
-    print(serverResponse.decode().strip())
+    return serverResponse.decode().strip()
