@@ -8,66 +8,145 @@ clientSocket = create_connection((serverName, serverPort))
 resp = clientSocket.recv(2048).decode()
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
-	print("1.CAPABILITY\t2.LOGIN\t3.LOGOUT\t4.CREATE\t5.DELETE\t6.RENAME\t7.SELECT MAILBOX")
-	print("8.DESELECT MAILBOX\t9.READING\t10.DELETE MAIL(S)\t11.LIST THE MAILBOXES")
+	print("1.CAPABILITY        2.LOGIN              3.LOGOUT    4.CREATE             5.DELETE               6.RENAME")
+	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES")
 else:
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
 
 logged_in = []
+selected_state = []
+login_state_commands = [1,3,4,5,6,7,8,9,10,11]
+selected_state_commands = [8,9,10]
+logout_state_commands = [1,2,3]
 
 while True:
 	try:
 		if len(logged_in) != 0:
 			if logged_in[1]:
-				choice = int(input("\n(STATUS: logged in)> "))
+				print("\n(STATUS: logged in (" + logged_in[0] + "))> ", end='')
+				choice = int(input())
 		else:
 			choice = int(input("\n(STATUS: logged out)> "))
 
 		if choice == 1:
 			command = capability()
+			print(executeCommand(clientSocket, command))
+			continue
 
 		elif choice == 2:
 			username = input("Username: ")
 			passwd = input("Password: ")
 			command = login(username, passwd)
-			response = executeCommand(clientSocket, command)
+			executed_command = executeCommand(clientSocket, command)
 
-			if "OK" in response:
+			if "OK" in executed_command:
 				logged_in.append(username)
 				logged_in.append(True)
 				print("Login Successful!")
 
-			elif "NO" in response:
+			elif "NO" in executed_command:
 				print("Invalid User or Password!")
 
-			elif "BAD" in response:
+			elif "BAD" in executed_command:
 				print("Try again!")
 
 			continue
 
 		elif choice == 3:
 			command = logout()
+			print(executeCommand(clientSocket, command))
+			print("Connection closed by foreign host.")
+			break
 
 		elif choice == 4:
 			mailbox = input("Name of mailbox to be created: ")
 			command = create(mailbox)
+			executed_command = executeCommand(clientSocket, command)
+
+			if "OK" in executed_command:
+				print("Created mailbox " + str(mailbox) + " successfully!")
+
+			elif "BAD" in executed_command:
+				print("Cannot create mailbox in logged out state.")
+			
+			elif "NO" in executed_command:
+				print("A mailbox with that name already exists. Try another name")
+
+			continue
 
 		elif choice == 5:
 			mailbox = input("Name of mailbox to be deleted: ")
 			command = delete(mailbox)
+			executed_command = executeCommand(clientSocket, command)
+
+			if "OK" in executed_command:
+				print("Mailbox " + mailbox + " deleted successfully!")
+			
+			elif "NO" in executed_command:
+				print("Mailbox " + mailbox + " doesn't exist!")
+			
+			elif "BAD" in executed_command:
+				print("Invalid mailbox name! Try again!")
+			
+			continue
 
 		elif choice == 6:
 			mailbox = input("Name of mailbox: ")
 			new_name = input("New name: ")
 			command = rename(mailbox, new_name)
+			executed_command = executeCommand(clientSocket, command)
+
+			if "OK" in executed_command:
+				print("Successfully changed the name of mailbox from " + str(mailbox) + " to " + str(new_name))
+			
+			elif "NO" in executed_command:
+				command = list_mailbox()
+				executed_command = executeCommand(clientSocket, command)
+				temp = executed_command.split("\n")
+				ls = list()
+				for i in temp:
+					i = i.strip().split(" ")
+					ls.append(i[-1])
+				ls.pop()
+				
+				if mailbox not in ls:
+					print("Mailbox " + str(mailbox) + " doesn't exist!")
+
+				if new_name in ls:
+					print("Mailbox can't be renamed with " + str(new_name) + " as " + str(new_name) + " already exists.")
+			
+			elif "BAD" in executed_command:
+				print("Invalid arguments! Try again!")
+
+			continue
 
 		elif choice == 7:
 			mailbox = input("Name of mailbox: ")
 			command = select(mailbox)
+			executed_command = executeCommand(clientSocket, command)
+
+			if "OK" in executed_command:
+				print("Mailbox " + mailbox + " has been selected")
+				selected_state.append(mailbox)
+				selected_state.append(True)
+			
+			elif "NO" in executed_command:
+				print("Mailbox " + mailbox + " does not exist!")
+			
+			elif "BAD" in executed_command:
+				print("Invalid mailbox name!")
+			
+			continue
 
 		elif choice == 8:
 			command = close()
+			executed_command = executeCommand(clientSocket, command)
+
+			if "OK" in executed_command:
+				print("Closed mailbox " + selected_state[0] + " successfully!")
+				while len(selected_state) != 0:
+					selected_state.pop()
 
 		elif choice == 9:
 			uid = int(input("uid of mail: "))
@@ -101,79 +180,41 @@ while True:
 			continue
 
 		elif choice == 10:
-			uid = int(input("uid of mail to be deleted: "))
+			uid = int(input("UID of mail to be deleted: "))
 			command = store(uid)
+			executeCommand(clientSocket, command)
+			command = expunge()
+			executed_command = executeCommand(clientSocket, command)
+			if "OK" in executed_command:
+				print("Deleted mail with UID: " + str(uid) + " successfully!")
+			elif "NO" in executed_command:
+				print("Can't delete that mail! Permission Denied!")
 		
 		elif choice == 11:
 			command = list_mailbox()
 			executed_command = executeCommand(clientSocket, command)
 			temp = executed_command.split("\n")
+
 			ls = list()
 			for i in temp:
 				i = i.strip().split(" ")
 				ls.append(i[-1])
 			ls.pop()
-			if "OK" in response:
+
+			if "OK" in executed_command:
 				print("List of mailboxes: ", end=" ")
 				for i in ls:
 					print(i, end = " ")
 			else:
 				print("Couldn't list the mailboxes")
-			continue
-			
-
-		executed_command = executeCommand(clientSocket, command)
-
-		if (choice == 4):
-			if "OK" in executed_command:
-				print("Created mailbox " + str(mailbox) + " successfully!")
-
-			elif "BAD" in executed_command:
-				print("Cannot create mailbox in logged out state.")
-			
-			elif "NO" in executed_command:
-				print("A mailbox with that name already exists. Try another name")
 
 			continue
-
-		elif (choice == 5):
-			if "OK" in executed_command:
-				print("Mailbox deleted successfully!")
 			
-			elif "NO" in executed_command:
-				print("Mailbox doesn't exist!")
-			
-			elif "BAD" in executed_command:
-				print("Invalid mailbox name! Try again!")
-			
-			continue
-			
-		elif (choice == 6):
-			if "OK" in executed_command:
-				print("Successfully changed the name of mailbox from " + str(mailbox) + " to " + str(new_name))
-			
-			elif "NO" in executed_command:
-				print("Mailbox " + str(mailbox) + " doesn't exist! OR Mailbox can't be renamed with " + str(new_name) + " as " + str(new_name) + " already exists.")
-			
-			elif "BAD" in executed_command:
-				print("Invalid arguments! Try again!")
 
-			continue
+		# print(executeCommand(clientSocket, command))
 
-		print(executed_command)
-		
-
-		if(choice == 10):
-			command = expunge()
-			print(executeCommand(clientSocket, command))
-
-		if(choice == 3):
-			print("Connection closed by foreign host.")
-			break
-
-	except Exception as err:
-		print(err)
-		print("\nInvalid Input ...\nTry again!\n")
+	except:
+		print("\nInvalid Input ...\nTry again!")
 
 clientSocket.close()
 
