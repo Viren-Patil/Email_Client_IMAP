@@ -37,7 +37,7 @@ while True:
 
 		elif choice == 2:
 			username = input("Username: ")
-			passwd = input("Password: ")
+			passwd = getpass.getpass()
 			command = login(username, passwd)
 			executed_command = executeCommand(clientSocket, command)
 
@@ -208,11 +208,20 @@ while True:
 			Password = getpass.getpass()
 			To = input("To: ")
 			Subject = input("Subject: ")
-			Message = input("Message: ")
+			msg = ""
+			Message = ""
+			print("Message(enter '.' on a new line to end input):")
+			while True:
+				msg = input()
+				if msg == '.':
+					break
+				Message += msg + '\n'
+
 			send_the_mail(From, To, Subject, Message, Password)
 			print("Sent mail!")
 
-	except:
+	except Exception as err:
+		print(err)
 		print("\nInvalid Input ...\nTry again!")
 
 clientSocket.close()
