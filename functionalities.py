@@ -11,9 +11,7 @@ def capability():
 	command = "CAPABILITY\r\n"
 	return command
 
-def login():
-	username = input("Username: ")
-	passwd = input("Password: ")
+def login(username, passwd):
 	command = "LOGIN " + username + " " + passwd + "\r\n" 
 	return command
 
