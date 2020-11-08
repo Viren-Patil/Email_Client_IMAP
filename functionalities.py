@@ -80,3 +80,4 @@ def executeCommand(clientSocket, command):
     clientSocket.sendall(command.encode())
     serverResponse = clientSocket.recv(2048)
     return serverResponse.decode().strip()
+

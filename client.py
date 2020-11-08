@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from socket import *
 from functionalities import *
+from smtp import *
+import getpass
 
 serverName = '127.0.0.1'
 serverPort = 143
@@ -9,7 +11,7 @@ resp = clientSocket.recv(2048).decode()
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
 	print("1.CAPABILITY        2.LOGIN              3.LOGOUT    4.CREATE             5.DELETE               6.RENAME")
-	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES")
+	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
 else:
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
@@ -32,7 +34,6 @@ while True:
 		if choice == 1:
 			command = capability()
 			print(executeCommand(clientSocket, command))
-			continue
 
 		elif choice == 2:
 			username = input("Username: ")
@@ -51,7 +52,6 @@ while True:
 			elif "BAD" in executed_command:
 				print("Try again!")
 
-			continue
 
 		elif choice == 3:
 			command = logout()
@@ -73,7 +73,6 @@ while True:
 			elif "NO" in executed_command:
 				print("A mailbox with that name already exists. Try another name")
 
-			continue
 
 		elif choice == 5:
 			mailbox = input("Name of mailbox to be deleted: ")
@@ -88,8 +87,7 @@ while True:
 			
 			elif "BAD" in executed_command:
 				print("Invalid mailbox name! Try again!")
-			
-			continue
+
 
 		elif choice == 6:
 			mailbox = input("Name of mailbox: ")
@@ -119,7 +117,6 @@ while True:
 			elif "BAD" in executed_command:
 				print("Invalid arguments! Try again!")
 
-			continue
 
 		elif choice == 7:
 			mailbox = input("Name of mailbox: ")
@@ -136,8 +133,6 @@ while True:
 			
 			elif "BAD" in executed_command:
 				print("Invalid mailbox name!")
-			
-			continue
 
 		elif choice == 8:
 			command = close()
@@ -177,7 +172,6 @@ while True:
 				Message += temp[m] + '\n'
 			mail = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n\n' + Message + '\n'	
 			print(mail)
-			continue
 
 		elif choice == 10:
 			uid = int(input("UID of mail to be deleted: "))
@@ -208,10 +202,15 @@ while True:
 			else:
 				print("Couldn't list the mailboxes")
 
-			continue
-			
 
-		# print(executeCommand(clientSocket, command))
+		elif choice == 12:
+			From = input("From: ")
+			Password = getpass.getpass()
+			To = input("To: ")
+			Subject = input("Subject: ")
+			Message = input("Message: ")
+			send_the_mail(From, To, Subject, Message, Password)
+			print("Sent mail!")
 
 	except:
 		print("\nInvalid Input ...\nTry again!")

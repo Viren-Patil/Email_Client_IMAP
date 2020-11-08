@@ -1,23 +1,13 @@
-# Python code to illustrate Sending mail from
-# your Gmail account
 import smtplib
+from email.message import EmailMessage
 
-# creates SMTP session
-s = smtplib.SMTP('smtp.office365.com', 587)
+def send_the_mail(From, To, Subject, Message, Password):
+    msg = EmailMessage()
+    msg['Subject'] = Subject
+    msg['From'] = From
+    msg['To'] = To
+    msg.set_content(Message)
 
-# start TLS for security
-s.starttls()
-
-# Authentication
-username = input()
-passwd = input()
-s.login(username, passwd)
-
-# message to be sent
-message = "Message_you_need_to_send"
-
-# sending the mail
-s.send_message(username, , message)
-
-# terminating the session
-s.quit()
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login('cnproject.emailclient@gmail.com','cnproject')
+        smtp.send_message(msg)
