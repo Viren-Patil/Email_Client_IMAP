@@ -9,7 +9,7 @@ resp = clientSocket.recv(2048).decode()
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
 	print("1.CAPABILITY\t2.LOGIN\t3.LOGOUT\t4.CREATE\t5.DELETE\t6.RENAME\t7.SELECT MAILBOX")
-	print("8.DESELECT MAILBOX\t9.READING\t10.DELETE MAIL(S)")
+	print("8.DESELECT MAILBOX\t9.READING\t10.DELETE MAIL(S)\t11.LIST THE MAILBOXES")
 else:
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
@@ -103,6 +103,24 @@ while True:
 		elif choice == 10:
 			uid = int(input("uid of mail to be deleted: "))
 			command = store(uid)
+		
+		elif choice == 11:
+			command = list_mailbox()
+			executed_command = executeCommand(clientSocket, command)
+			temp = executed_command.split("\n")
+			ls = list()
+			for i in temp:
+				i = i.strip().split(" ")
+				ls.append(i[-1])
+			ls.pop()
+			if "OK" in response:
+				print("List of mailboxes: ", end=" ")
+				for i in ls:
+					print(i, end = " ")
+			else:
+				print("Couldn't list the mailboxes")
+			continue
+			
 
 		executed_command = executeCommand(clientSocket, command)
 

@@ -69,6 +69,10 @@ def store(uid):
 	
 def expunge():
 	return "EXPUNGE\r\n"
+	
+def list_mailbox():
+	command = 'LIST "" %\r\n'
+	return command
 
 def executeCommand(clientSocket, command):
     alp_num_string = get_alphanumeric_string()
