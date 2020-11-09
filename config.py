@@ -6,20 +6,20 @@ import sys
 server_replies = False
 
 login_credentials_for_imap = {
-    "username": "batman",
-    "password": "batman"
+    "username": "<your_system_username>",
+    "password": "<your_system_password>"
 }
 
 # Make False if you provide credentials in the dict login_credentials_for_imap above
-provide_login_credentials_imap_explicitly = False
+provide_login_credentials_imap_explicitly = True
 
 login_credentials_for_smtp = {
-    "email-id": "cnproject.emailclient@gmail.com",
-    "password": "cnproject"
+    "email-id": "<your_email>",
+    "password": "<account_password>"
 }
 
 # Make False if you provide credentials in the dict login_credentials_for_smtp above
-provide_login_cerdentials_smtp_explicitly = False
+provide_login_cerdentials_smtp_explicitly = True
 
 # Note: You can give multiple attachments in this list
-attachments_for_mail = ['functionalities.py']
+attachments_for_mail = []
