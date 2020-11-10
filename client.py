@@ -9,11 +9,12 @@ serverName = '127.0.0.1'
 serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
 resp = clientSocket.recv(2048).decode()
+
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
 	print("1.CAPABILITY        2.LOGIN              3.LOGOUT    4.CREATE             5.DELETE MAILBOX       6.RENAME")
 	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
-else:
+else:	
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
 
@@ -27,12 +28,15 @@ while True:
 	try:
 		if len(logged_in) != 0:
 			if logged_in[1]:
-				print("\n(STATUS: logged in (" + logged_in[0] + "))> ", end='')
+				print("\n(" + logged_in[0] + " (-1 to clear screen))> ", end='')
 				choice = int(input())
 		else:
-			choice = int(input("\n(STATUS: logged out)> "))
+			choice = int(input("\n(logged-out (-1 to clear screen))> "))
+		
+		if choice == -1:
+			clearScreen()
 
-		if choice == 1:
+		elif choice == 1:
 			command = capability()
 			print(executeCommand(clientSocket, command))
 
@@ -73,6 +77,7 @@ while True:
 			else:
 				print("Logging out! Bye! Connection closed")
 			break
+
 
 		elif choice == 4:
 			mailbox = input("Name of mailbox to be created: ")
@@ -165,6 +170,7 @@ while True:
 				elif "BAD" in executed_command:
 					print("Invalid mailbox name!")
 
+
 		elif choice == 8:
 			command = close()
 			executed_command = executeCommand(clientSocket, command)
@@ -177,6 +183,7 @@ while True:
 					print("Closed mailbox " + selected_state[0] + " successfully!")
 					while len(selected_state) != 0:
 						selected_state.pop()
+
 
 		elif choice == 9:
 			uid = int(input("uid of mail: "))
@@ -213,6 +220,7 @@ while True:
 				mail = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n\n' + Message + '\n'	
 				print(mail)
 
+
 		elif choice == 10:
 			uid = int(input("UID of mail to be deleted: "))
 			command = store(uid)
@@ -228,6 +236,7 @@ while True:
 					print("Deleted mail with UID: " + str(uid) + " successfully!")
 				elif "NO" in executed_command:
 					print("Can't delete that mail! Permission Denied!")
+
 		
 		elif choice == 11:
 			command = list_mailbox()
@@ -245,11 +254,13 @@ while True:
 				ls.pop()
 
 				if "OK" in executed_command:
-					print("List of mailboxes: ", end=" ")
+					print("List of mailboxes:")
 					for i in ls:
-						print(i, end = " ")
+						print('    --> ', i)
+
 				else:
 					print("Couldn't list the mailboxes")
+
 
 		elif choice == 12:
 			if conf.provide_login_cerdentials_smtp_explicitly:
@@ -259,7 +270,10 @@ while True:
 				From = conf.login_credentials_for_smtp["email-id"]
 				Password = conf.login_credentials_for_smtp["password"]
 
-			To = input("To: ")
+			To = None
+			if not conf.multi_recipients:
+				To = input("To: ")
+
 			Subject = input("Subject: ")
 			msg = ""
 			Message = ""

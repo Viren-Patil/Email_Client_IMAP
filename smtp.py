@@ -1,14 +1,29 @@
 import smtplib
 import imghdr
 from email.message import EmailMessage
+import csv
 
-octetStreamFileTypes = ('.pdf', '.ppt', '.pptx', '.txt', '.py', '.odg', '.doc', '.docx')
+octetStreamFileTypes = ('.pdf', '.ppt', '.pptx', '.txt', '.py', '.odg', '.doc', '.docx', '.sh', '.c')
 
 def send_the_mail(From, To, Subject, Message, Password, Attachments):
     msg = EmailMessage()
     msg['Subject'] = Subject
     msg['From'] = From
-    msg['To'] = To
+    
+    if not To:
+        recipients = "recipients.csv"
+        f = open(recipients,'r')
+        Receipients = []
+        for line in f:
+            ln = line.split(',')
+            ln[-1] = ln[-1].replace('\n', '')
+            Receipients.append(ln[-1])
+
+        msg['To'] = ', '.join(Receipients)
+
+    else:
+        msg['To'] = To
+
     msg.set_content(Message)
 
     for attachment in Attachments:
@@ -27,3 +42,4 @@ def send_the_mail(From, To, Subject, Message, Password, Attachments):
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(From, Password)
         smtp.send_message(msg)
+        

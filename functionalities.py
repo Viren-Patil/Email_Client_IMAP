@@ -1,6 +1,11 @@
+import os
 import sys
 import string
 import random
+
+def printMenu():
+	print("1.CAPABILITY        2.LOGIN              3.LOGOUT    4.CREATE             5.DELETE MAILBOX       6.RENAME")
+	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
 
 def get_alphanumeric_string():
 	opt = string.ascii_letters + string.digits
@@ -81,3 +86,6 @@ def executeCommand(clientSocket, command):
     serverResponse = clientSocket.recv(2048)
     return serverResponse.decode().strip()
 
+def clearScreen():
+	os.system('clear')
+	printMenu()
