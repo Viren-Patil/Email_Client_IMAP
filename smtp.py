@@ -11,8 +11,7 @@ def send_the_mail(From, To, Subject, Message, Password, Attachments):
     msg['From'] = From
     
     if not To:
-        recipients = "recipients.csv"
-        f = open(recipients,'r')
+        f = open("recipients.csv",'r')
         Receipients = []
         for line in f:
             ln = line.split(',')

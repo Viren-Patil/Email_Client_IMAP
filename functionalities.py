@@ -89,3 +89,14 @@ def executeCommand(clientSocket, command):
 def clearScreen():
 	os.system('clear')
 	printMenu()
+
+def printInputLine(param=None):
+	if param:
+		print(param + " (-1 to clear screen))> ", end='')
+		choice = int(input())
+	else:
+		choice = int(input("\n(logged-out (-1 to clear screen))> "))
+
+	return choice
+
+

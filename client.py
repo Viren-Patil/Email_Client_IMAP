@@ -5,10 +5,6 @@ import config as conf
 from smtp import *
 import getpass
 
-global selected_mailbox
-global mno
-selected_mailbox="inbox"
-
 serverName = '127.0.0.1'
 serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
@@ -16,27 +12,31 @@ resp = clientSocket.recv(2048).decode()
 
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
-	print("1.CAPABILITY        2.LOGIN              3.LOGOUT    4.CREATE             5.DELETE MAILBOX       6.RENAME")
-	print("7.SELECT MAILBOX    8.DESELECT MAILBOX   9.READING   10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
+	print("1.CAPABILITY        2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX       6.RENAME")
+	print("7.SELECT MAILBOX    8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
 else:	
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
 
-logged_in = []
-selected_state = []
+logged_in = [None, False]
+selected_state = [None, False]
 login_state_commands = [1,3,4,5,6,7,8,9,10,11]
 selected_state_commands = [8,9,10]
 logout_state_commands = [1,2,3]
 
 while True:
 	try:
-		if len(logged_in) != 0:
-			if logged_in[1]:
-				print("\n(" + logged_in[0] + " (-1 to clear screen))> ", end='')
-				choice = int(input())
+		if logged_in[1] and selected_state[1]:
+			param = "\n(" + logged_in[0] + "[" + selected_state[0] + "]"
+			choice = printInputLine(param)
+			
+		elif logged_in[1] and not selected_state[1]:
+			param = "\n(" + logged_in[0]
+			choice = printInputLine(param)
+
 		else:
-			choice = int(input("\n(logged-out (-1 to clear screen))> "))
-		
+			choice = printInputLine()
+					
 		if choice == -1:
 			clearScreen()
 
@@ -57,13 +57,13 @@ while True:
 			
 			if conf.server_replies:
 				print(executed_command)
-				logged_in.append(username)
-				logged_in.append(True)
+				logged_in[0] = username
+				logged_in[1] = True
 			
 			else:
 				if "OK" in executed_command:
-					logged_in.append(username)
-					logged_in.append(True)
+					logged_in[0] = username
+					logged_in[1] = True
 					print("Login Successful!")
 
 				elif "NO" in executed_command:
@@ -156,18 +156,20 @@ while True:
 
 		elif choice == 7:
 			mailbox = input("Name of mailbox: ")
-			selected_mailbox = mailbox
 			command = select(mailbox)
 			executed_command = executeCommand(clientSocket, command)
 			
 			if conf.server_replies:
 				print(executed_command)
+				if "OK" in executed_command:
+					selected_state[0] = mailbox
+					selected_state[1] = True
 			
 			else:
 				if "OK" in executed_command:
 					print("Mailbox " + mailbox + " has been selected")
-					selected_state.append(mailbox)
-					selected_state.append(True)
+					selected_state[0] = mailbox
+					selected_state[1] = True
 				
 				elif "NO" in executed_command:
 					print("Mailbox " + mailbox + " does not exist!")
@@ -177,85 +179,96 @@ while True:
 
 
 		elif choice == 8:
-			command = close()
-			executed_command = executeCommand(clientSocket, command)
-
-			if conf.server_replies:
-				print(executed_command)
-			
+			if selected_state[1] == False:
+				print("You have not selected an inbox")
 			else:
-				if "OK" in executed_command:
-					selected_mailbox = None
-					print("Closed mailbox " + selected_state[0] + " successfully!")
-					while len(selected_state) != 0:
-						selected_state.pop()
+				command = close()
+				executed_command = executeCommand(clientSocket, command)
+
+				if conf.server_replies:
+					print(executed_command)
+					if "OK" in executed_command:
+						selected_state[0] = None
+						selected_state[1] = False
+
+				else:
+					if "OK" in executed_command:
+						print("Closed " + selected_state[0] + " successfully!")
+						selected_state[0] = None
+						selected_state[1] = False
 
 
 		elif choice == 9:
-			uid = int(input("uid of mail: "))
-			command = "SELECT " + selected_mailbox + '\r\n'
-			
-			#parsing of count of emails present in the mailbox
-			x = executeCommand(clientSocket, command)
-			temp2 = x.split("\n")
-			for i in range(len(temp2)):
-				temp = temp2[i].strip().split(" ")
-				if 'EXISTS' in temp:
-					mno = int(temp[1])
-					break
-			if uid > mno or uid < 1:
-				print(f"Please enter valid mail number between 1 and {mno}")
-				continue	
-			command = read_complete_mail(uid)
-			response = executeCommand(clientSocket, command)
-			
-
-			if conf.server_replies:
-				print(response)
-			
+			if selected_state[1] == False:
+				print("You have not selected an inbox")
 			else:
-				l = response.split("\n")
-				length = len(l)
-				if str(l[7])[:2] == "To":
-					To = str(l[7])
-				if str(l[8])[:3] == "Cc":
-					From = str(l[9])
-					Subject = str(l[10])
-					Cc = str(l[8])
-					Date = str(l[12])
-					Message = (l[20:length - 3])
+				uid = int(input("uid of mail: "))
+				command = "SELECT " + selected_state[0] + '\r\n'
+				
+				#parsing of count of emails present in the mailbox
+				x = executeCommand(clientSocket, command)
+				temp2 = x.split("\n")
+				for i in range(len(temp2)):
+					temp = temp2[i].strip().split(" ")
+					if 'EXISTS' in temp:
+						mno = int(temp[1])
+						break
+				if uid > mno or uid < 1:
+					print(f"Please enter valid mail number between 1 and {mno}")
+					continue	
+				command = read_complete_mail(uid)
+				response = executeCommand(clientSocket, command)
+				
+
+				if conf.server_replies:
+					print(response)
+				
 				else:
-					From = str(l[8])
-					Subject = str(l[9])
-					Date = str(l[11])
-					Message = l[19: length - 3]
-					message = ""
-				for i in Message:
-					message += i
-				temp = message.split('\r')
-				t = len(temp)
-				Message = ""
-				for m in range(t - 1):
-					Message += temp[m] + '\n'
-				mail = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n\n' + Message + '\n'	
-				print(mail)
+					l = response.split("\n")
+					length = len(l)
+					if str(l[7])[:2] == "To":
+						To = str(l[7])
+					if str(l[8])[:3] == "Cc":
+						From = str(l[9])
+						Subject = str(l[10])
+						Cc = str(l[8])
+						Date = str(l[12])
+						Message = (l[20:length - 3])
+					else:
+						From = str(l[8])
+						Subject = str(l[9])
+						Date = str(l[11])
+						Message = l[19: length - 3]
+						message = ""
+					for i in Message:
+						message += i
+					temp = message.split('\r')
+					t = len(temp)
+					Message = ""
+					for m in range(t - 1):
+						Message += temp[m] + '\n'
+					mail = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n\n' + Message + '\n'	
+					print(mail)
 
 
 		elif choice == 10:
-			uid = int(input("UID of mail to be deleted: "))
-			command = store(uid)
-			executeCommand(clientSocket, command)
-			command = expunge()
-			executed_command = executeCommand(clientSocket, command)
-
-			if conf.server_replies:
-				print(executed_command)
-			
+			if selected_state[1] == False:
+				print("You have not selected an inbox")
 			else:
-				if "OK" in executed_command:
-					print("Deleted mail with UID: " + str(uid) + " successfully!")
-				elif "NO" in executed_command:
-					print("Can't delete that mail! Permission Denied!")
+				uid = int(input("UID of mail to be deleted: "))
+				command = store(uid)
+				executeCommand(clientSocket, command)
+				command = expunge()
+				executed_command = executeCommand(clientSocket, command)
+
+				if conf.server_replies:
+					print(executed_command)
+				
+				else:
+					if "OK" in executed_command:
+						print("Deleted mail with UID: " + str(uid) + " successfully!")
+					elif "NO" in executed_command:
+						print("Can't delete that mail! Permission Denied!")
 
 		
 		elif choice == 11:
@@ -305,6 +318,9 @@ while True:
 				Message += msg + '\n'
 			send_the_mail(From, To, Subject, Message, Password, conf.attachments_for_mail)
 			print("Sent mail!")
+
+		else:
+			print("INVALID CHOICE!")
 
 	except Exception as err:
 		print(err)
