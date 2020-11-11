@@ -77,7 +77,7 @@ def expunge():
 	
 def list_mailbox():
 	command = 'LIST "" %\r\n'
-	return command
+	return command	
 
 def executeCommand(clientSocket, command):
     alp_num_string = get_alphanumeric_string()

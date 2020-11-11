@@ -5,6 +5,10 @@ import config as conf
 from smtp import *
 import getpass
 
+global selected_mailbox
+global mno
+selected_mailbox="inbox"
+
 serverName = '127.0.0.1'
 serverPort = 143
 clientSocket = create_connection((serverName, serverPort))
@@ -152,6 +156,7 @@ while True:
 
 		elif choice == 7:
 			mailbox = input("Name of mailbox: ")
+			selected_mailbox = mailbox
 			command = select(mailbox)
 			executed_command = executeCommand(clientSocket, command)
 			
@@ -180,6 +185,7 @@ while True:
 			
 			else:
 				if "OK" in executed_command:
+					selected_mailbox = None
 					print("Closed mailbox " + selected_state[0] + " successfully!")
 					while len(selected_state) != 0:
 						selected_state.pop()
@@ -187,14 +193,28 @@ while True:
 
 		elif choice == 9:
 			uid = int(input("uid of mail: "))
-			command = read_complete_mail(uid)
+			command = "SELECT " + selected_mailbox + '\r\n'
+			
+			#parsing of count of emails present in the mailbox
 			x = executeCommand(clientSocket, command)
+			temp2 = x.split("\n")
+			for i in range(len(temp2)):
+				temp = temp2[i].strip().split(" ")
+				if 'EXISTS' in temp:
+					mno = int(temp[1])
+					break
+			if uid > mno or uid < 1:
+				print(f"Please enter valid mail number between 1 and {mno}")
+				continue	
+			command = read_complete_mail(uid)
+			response = executeCommand(clientSocket, command)
+			
 
 			if conf.server_replies:
-				print(x)
+				print(response)
 			
 			else:
-				l = x.split("\n")
+				l = response.split("\n")
 				length = len(l)
 				if str(l[7])[:2] == "To":
 					To = str(l[7])

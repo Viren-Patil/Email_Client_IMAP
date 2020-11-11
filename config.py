@@ -11,7 +11,7 @@ login_credentials_for_imap = {
 }
 
 # Make False if you provide credentials in the dict login_credentials_for_imap above
-provide_login_credentials_imap_explicitly = True
+provide_login_credentials_imap_explicitly = False
 
 login_credentials_for_smtp = {
     "email-id": "",
