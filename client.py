@@ -228,20 +228,20 @@ while True:
 				unseen_uids = ((unseen_uids.split('\n')[0]).strip().split(" "))[2:]
 				unseen_uids = [int(i) for i in unseen_uids]
 				#print(unseen_uids)
+				mail_list = list()
 				for u in mails_to_be_displayed:
 					command = read_header_mail(u)
 					response = executeCommand(clientSocket, command)
 
 					To, Cc, From, Date, Subject = extracter_email(response)	
-					mail_list = list()
 					if u in unseen_uids:	
-						mail = "* " + str(u) + " "+ From +" "+ Subject +" "+ Date
-						print(mail)
-						mail_list.append(mail)
+						mail = ["* ", str(u),From, Subject, Date]
+						#print(mail)
 					else:
-						mail = "  " + str(u) + " " + From +" "+ Subject +" "+ Date
-						print(mail)
-						mail_list.append(mail)	
+						mail = ["  ", str(u),From, Subject, Date]
+						#print(mail)
+					mail_list.append(mail)	
+				print(tabulate(mail_list, headers=["Unseen", "uid", "From", "Subject", "Date"], tablefmt="psql", colalign=("center", "center", "center", "left", "center")))
 				
 				user_required_mail = int(input("Which message do you want to read?\n"))
 				while user_required_mail != -1:
