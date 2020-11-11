@@ -67,6 +67,10 @@ def read_header_mail(mail_no):
 def read_size_mail(mail_no):
 	command = "FETCH " + str(mail_no) + ":" + str(mail_no) + " rfc822.size\r\n"
 	return command
+	
+def read_message(mail_no):
+	command = "FETCH " + str(mail_no) + ":" + str(mail_no) + " rfc822.text\r\n"
+	return command
 
 def store(uid):
 	command = "STORE " + str(uid) + ":" + str(uid) + " +FLAGS (\Deleted)\r\n"
@@ -77,8 +81,44 @@ def expunge():
 	
 def list_mailbox():
 	command = 'LIST "" %\r\n'
-	return command	
+	return command
 
+def search_seen():
+	command = "SEARCH SEEN\r\n"
+	return command
+
+def search_recent():
+	command = "SEARCH RECENT\r\n"
+	return command
+
+def search_unseen():
+	command = "SEARCH UNSEEN\r\n"
+	return command
+
+def search_unseen():
+	command = "SEARCH UNSEEN\r\n"
+	return command
+
+def extracter_email(response):
+	l = response.split("\n")
+	length = len(l)
+	Cc = None
+	Subject = None
+	for n in range(length):
+		l[n] = l[n].strip().split(" ")
+	for i in range(length):
+		if l[i][0] == "To:":
+			To = " ".join(l[i][1:])
+		if l[i][0] == "Cc:":
+			Cc = l[i][1:]
+		if l[i][0] == "From:":
+			From = " ".join(l[i][1:])
+		if l[i][0] == "Date:":
+			Date = ' '.join(l[i][1:])
+		if l[i][0] == "Subject:":					
+			Subject = ' '.join(l[i][1:])
+	return (To, Cc, From, Date, Subject)
+	
 def executeCommand(clientSocket, command):
     alp_num_string = get_alphanumeric_string()
     command = alp_num_string + " " + command

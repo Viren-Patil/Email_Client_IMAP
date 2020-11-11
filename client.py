@@ -4,6 +4,8 @@ from functionalities import *
 import config as conf
 from smtp import *
 import getpass
+from tabulate import tabulate
+global mno #This variable maintains count of emails present in mailbox
 
 serverName = '127.0.0.1'
 serverPort = 143
@@ -202,54 +204,72 @@ while True:
 			if selected_state[1] == False:
 				print("You have not selected an inbox")
 			else:
-				uid = int(input("uid of mail: "))
 				command = "SELECT " + selected_state[0] + '\r\n'
 				
 				#parsing of count of emails present in the mailbox
 				x = executeCommand(clientSocket, command)
 				temp2 = x.split("\n")
-				for i in range(len(temp2)):
-					temp = temp2[i].strip().split(" ")
+				for a in range(len(temp2)):
+					temp = temp2[a].strip().split(" ")
 					if 'EXISTS' in temp:
 						mno = int(temp[1])
 						break
-				if uid > mno or uid < 1:
-					print(f"Please enter valid mail number between 1 and {mno}")
+				user_required_no_mails = int(input(f"How many mails do you want to fetch?{[mno]}\n"))
+				if user_required_no_mails > mno or user_required_no_mails < 1:
+					print(f"you can fetch upto {mno} mails only!") 
 					continue	
-				command = read_complete_mail(uid)
-				response = executeCommand(clientSocket, command)
+				mails_to_be_displayed = [i for i in range(mno - user_required_no_mails + 1, mno + 1)]	
 				
+				seen_uids = executeCommand(clientSocket, search_seen())
+				seen_uids = ((seen_uids.split('\n')[0]).strip().split(" "))[2:]
+				seen_uids = [int(i) for i in seen_uids]
+				#print(seen_uids)
+				unseen_uids = executeCommand(clientSocket, search_unseen())
+				unseen_uids = ((unseen_uids.split('\n')[0]).strip().split(" "))[2:]
+				unseen_uids = [int(i) for i in unseen_uids]
+				#print(unseen_uids)
+				for u in mails_to_be_displayed:
+					command = read_header_mail(u)
+					response = executeCommand(clientSocket, command)
 
-				if conf.server_replies:
-					print(response)
-				
-				else:
-					l = response.split("\n")
-					length = len(l)
-					if str(l[7])[:2] == "To":
-						To = str(l[7])
-					if str(l[8])[:3] == "Cc":
-						From = str(l[9])
-						Subject = str(l[10])
-						Cc = str(l[8])
-						Date = str(l[12])
-						Message = (l[20:length - 3])
+					To, Cc, From, Date, Subject = extracter_email(response)	
+					mail_list = list()
+					if u in unseen_uids:	
+						mail = "* " + str(u) + " "+ From +" "+ Subject +" "+ Date
+						print(mail)
+						mail_list.append(mail)
 					else:
-						From = str(l[8])
-						Subject = str(l[9])
-						Date = str(l[11])
-						Message = l[19: length - 3]
-						message = ""
-					for i in Message:
-						message += i
-					temp = message.split('\r')
-					t = len(temp)
-					Message = ""
-					for m in range(t - 1):
-						Message += temp[m] + '\n'
-					mail = From + '\n' + Subject + '\n' + To + '\n' + Date + '\n\n' + Message + '\n'	
-					print(mail)
-
+						mail = "  " + str(u) + " " + From +" "+ Subject +" "+ Date
+						print(mail)
+						mail_list.append(mail)	
+				
+				user_required_mail = int(input("Which message do you want to read?\n"))
+				while user_required_mail != -1:
+				
+					if user_required_mail > mno or user_required_mail < 0:
+						print(f"you can fetch upto {mno} mails only!")
+						user_required_mail = int(input("Which message do you want to read?\n"))
+					else:
+						command1 = read_header_mail(user_required_mail)
+						response1 = executeCommand(clientSocket, command1)
+						To, Cc, From, Date, Subject = extracter_email(response1)	
+					
+						command2 = read_message(user_required_mail)
+						response2 = executeCommand(clientSocket, command2)
+						print("\n")
+						print("From: ", From)
+						if Subject:
+							print("Subject: ", Subject)
+						print("To: ", To)
+						if Cc:
+							print("Cc: ", Cc)
+						print("Date: ", Date) 
+						l = response2.split("\n")
+						length = len(l)
+						for b in range(1, length - 2):
+							print(l[b])
+						user_required_mail = int(input("Which message do you want to read?\n"))
+					
 
 		elif choice == 10:
 			if selected_state[1] == False:

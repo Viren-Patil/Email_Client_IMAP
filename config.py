@@ -3,11 +3,11 @@ import sys
 
 # False recommended
 # Make True if you want a deeper understanding of what happens behind the scene.
-server_replies = False
+server_replies = True
 
 login_credentials_for_imap = {
-    "username": "batman",
-    "password": "batman"
+    "username": "rutvik",
+    "password": "root"
 }
 
 # Make False if you provide credentials in the dict login_credentials_for_imap above
