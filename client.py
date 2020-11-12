@@ -16,7 +16,7 @@ if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
 	print("1.CAPABILITY        2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX       6.RENAME")
 	print("7.SELECT MAILBOX    8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
-	print("13.SMTP2")
+	print("13.SMTP ON LOCALHOST")
 else:	
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
@@ -245,12 +245,13 @@ while True:
 					mail_list.append(mail)	
 				print(tabulate(mail_list, headers=["Unseen", "uid", "From", "Subject", "Date"], tablefmt="psql", colalign=("center", "center", "center", "left", "center")))
 				
-				user_required_mail = int(input("Which message do you want to read?\n"))
+				
+				user_required_mail = int(input("Which message do you want to read? [-1 to stop reading]\n"))
 				while user_required_mail != -1:
 				
 					if user_required_mail > mno or user_required_mail < 0:
 						print(f"you can fetch upto {mno} mails only!")
-						user_required_mail = int(input("Which message do you want to read?[-1 to stop reading]\n"))
+						user_required_mail = int(input("Which message do you want to read? [-1 to stop reading]\n"))
 					else:
 						command1 = read_header_mail(user_required_mail)
 						response1 = executeCommand(clientSocket, command1)
@@ -270,7 +271,7 @@ while True:
 						length = len(l)
 						for b in range(1, length - 2):
 							print(l[b])
-						user_required_mail = int(input("Which message do you want to read?[-1 to stop reading]\n"))
+						user_required_mail = int(input("Which message do you want to read? [-1 to stop reading]\n"))
 					
 
 		elif choice == 10:
@@ -346,8 +347,7 @@ while True:
 			receiver = input("Enter receiver(s): ").split() #must be space separated
 			subject = input("Enter subject: ")
 			Message = list()
-			print("Enter the message")
-			message = input("press . to end the message\n")
+			message = input("Enter Message(Enter '.' on a new line to end input):\n")
 			Message.append(message)
 			while message != ".":
 				message = input()
@@ -357,7 +357,7 @@ while True:
 			serverName = '127.0.0.1'			
 			serverPort = 25
 
-			clientSocket.close()
+			#clientSocket.close()
 
 			smtpSocket = create_connection((serverName, serverPort))
 			resp = smtpSocket.recv(2048).decode()
@@ -385,8 +385,9 @@ while True:
 				print(resp4)
 			if "queued" in resp4:
 				print("Mail sent Successfully!")
-
-			clientSocket = create_connection((serverName, serverPort))
+			else:
+				print("Cannot send mail, Enter valid recipients")
+			#clientSocket = create_connection((serverName, serverPort))
 		else:
 			print("INVALID CHOICE!")
 	except Exception as err:
