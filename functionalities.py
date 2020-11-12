@@ -119,12 +119,19 @@ def extracter_email(response):
 			Subject = ' '.join(l[i][1:])
 	return (To, Cc, From, Date, Subject)
 	
+	
+	
 def executeCommand(clientSocket, command):
     alp_num_string = get_alphanumeric_string()
     command = alp_num_string + " " + command
     clientSocket.sendall(command.encode())
     serverResponse = clientSocket.recv(2048)
     return serverResponse.decode().strip()
+
+def executeCommand_smtp(smtpSocket, command):
+	smtpSocket.sendall(command.encode())
+	serverResponse = smtpSocket.recv(2048)
+	return serverResponse.decode().strip()
 
 def clearScreen():
 	os.system('clear')
