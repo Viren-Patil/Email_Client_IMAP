@@ -23,8 +23,8 @@ else:
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
 
-logged_in = [None, False]
-selected_state = [None, False]
+logged_in = [None, False] 
+selected_state = [None, False] #selected state means mailbox is selected 
 
 while True:
 	try:
@@ -39,17 +39,17 @@ while True:
 		else:
 			choice = printInputLine()
 					
-		if choice == -1:
+		if choice == -1:  #for clearing the screen
 			clearScreen()
 
-		elif choice == 1:
+		elif choice == 1: #Capability
 			command = capability()
 			print(executeCommand(clientSocket, command))
 
-		elif choice == 2:
+		elif choice == 2: #Login
 			if conf.provide_login_credentials_imap_explicitly:
 				username = input("Username: ")
-				passwd = getpass.getpass()
+				passwd = getpass.getpass() #so that user can't see password while entering credentials
 			else:
 				username = conf.login_credentials_for_imap["username"]
 				passwd = conf.login_credentials_for_imap["password"]
@@ -75,7 +75,7 @@ while True:
 					print("Try again! (Cannot login in logged in state)")
 
 
-		elif choice == 3:
+		elif choice == 3: #Logout
 			if logged_in[1] == False:
 				print("You are already logged out!")
 			else:
@@ -91,7 +91,7 @@ while True:
 				continue
 
 
-		elif choice == 4:
+		elif choice == 4: #Creating Mailbox
 			mailbox = input("Name of mailbox to be created: ")
 			command = create(mailbox)
 			executed_command = executeCommand(clientSocket, command)
@@ -110,7 +110,7 @@ while True:
 					print("A mailbox with that name already exists. Try another name")
 
 
-		elif choice == 5:
+		elif choice == 5: #Deleting mailbox
 			mailbox = input("Name of mailbox to be deleted: ")
 			command = delete(mailbox)
 			executed_command = executeCommand(clientSocket, command)
@@ -129,7 +129,7 @@ while True:
 					print("Invalid mailbox name! Try again!")
 
 
-		elif choice == 6:
+		elif choice == 6: #Renaming mailbox
 			mailbox = input("Name of mailbox: ")
 			new_name = input("New name: ")
 			command = rename(mailbox, new_name)
@@ -142,13 +142,14 @@ while True:
 				if "OK" in executed_command:
 					print("Successfully changed the name of mailbox from " + str(mailbox) + " to " + str(new_name))
 				
-				elif "NO" in executed_command:
+				elif "NO" in executed_command: #Logic for checking the reason behind not able to rename 
+											   # the mailbox. 
 					command = list_mailbox()
 					executed_command = executeCommand(clientSocket, command)
-					temp = executed_command.split("\n")
+					temp = executed_command.split("\n")        #temp is list of strings
 					ls = list()
 					for i in temp:
-						i = i.strip().split(" ")
+						i = i.strip().split(" ")				#converting list of strings to list of lists
 						ls.append(i[-1])
 					ls.pop()
 					
@@ -162,7 +163,7 @@ while True:
 					print("Invalid arguments! Try again!")
 
 
-		elif choice == 7:
+		elif choice == 7: #Selecting mailbox
 			mailbox = input("Name of mailbox: ")
 			command = select(mailbox)
 			executed_command = executeCommand(clientSocket, command)
@@ -186,9 +187,9 @@ while True:
 					print("Invalid mailbox name!")
 
 
-		elif choice == 8:
+		elif choice == 8: #Deselecting mailbox
 			if selected_state[1] == False:
-				print("You have not selected an inbox")
+				print("You have not selected any mailbox")
 			else:
 				command = close()
 				executed_command = executeCommand(clientSocket, command)
@@ -206,13 +207,13 @@ while True:
 						selected_state[1] = False
 
 
-		elif choice == 9:
+		elif choice == 9: #Fetching and reading of mails
 			if selected_state[1] == False:
 				print("You have not selected an inbox")
 			else:
 				command = "SELECT " + selected_state[0] + '\r\n'
 				
-				#parsing of count of emails present in the mailbox
+				#parsing of count of emails present in the mailbox from response of SELECT command
 				x = executeCommand(clientSocket, command)
 				temp2 = x.split("\n")
 				for a in range(len(temp2)):
@@ -220,33 +221,39 @@ while True:
 					if 'EXISTS' in temp:
 						mno = int(temp[1])
 						break
-						
+				
+				#Asking user the no of mails he want to see in tabular form		
 				user_required_no_mails = int(input(f"How many mails do you want to fetch? ({mno} mails in your {selected_state[0]})\n"))
 				if user_required_no_mails > mno or user_required_no_mails < 1:
 					print(f"you can fetch upto {mno} mails only!") 
 					continue	
+				
+				#List of uids of recent mails (count = user specified above)	
 				mails_to_be_displayed = [i for i in range(mno - user_required_no_mails + 1, mno + 1)]	
 				
+				#Creating list of uids of \SEEN mails
 				seen_uids = executeCommand(clientSocket, search_seen())
 				seen_uids = ((seen_uids.split('\n')[0]).strip().split(" "))[2:]
 				seen_uids = [int(i) for i in seen_uids]
-				#print(seen_uids)
+				
+				#Creating list of uids of \UNSEEN mails
 				unseen_uids = executeCommand(clientSocket, search_unseen())
 				unseen_uids = ((unseen_uids.split('\n')[0]).strip().split(" "))[2:]
 				unseen_uids = [int(i) for i in unseen_uids]
-				#print(unseen_uids)
+				
 				mail_list = list()
+				
 				for u in mails_to_be_displayed:
-					command = read_header_mail(u)
+					command = read_header_mail(u) #function to find only headers
 					response = executeCommand(clientSocket, command)
 
-					To, Cc, From, Date, Subject = extracter_email(response)	
+					To, Cc, From, Date, Subject = extracter_email(response)	#extracter_mail function parses required data and returns as tuple
 					if u in unseen_uids:	
 						mail = ["* ", str(u),From, Subject, Date]
-						#print(mail)
+						
 					else:
 						mail = ["  ", str(u),From, Subject, Date]
-						#print(mail)
+						
 					mail_list.append(mail)	
 				print(tabulate(mail_list, headers=["Unseen", "uid", "From", "Subject", "Date"], tablefmt="psql", colalign=("center", "center", "center", "left", "center")))
 				
@@ -262,10 +269,15 @@ while True:
 						response1 = executeCommand(clientSocket, command1)
 						To, Cc, From, Date, Subject = extracter_email(response1)	
 					
-						command2 = read_message(user_required_mail)
+						command2 = read_message(user_required_mail) #read_message only fetches message
 						response2 = executeCommand(clientSocket, command2)
 						print("\n")
 						print("From: ", From)
+						
+						#Sometimes mail may not have subject, cc, etc. 
+						#In that case, those variables will be None as per extracter_mail function
+						#and hence that info will not print accordingly
+	
 						if Subject:
 							print("Subject: ", Subject)
 						print("To: ", To)
@@ -273,10 +285,14 @@ while True:
 							print("Cc: ", Cc)
 						print("Date: ", Date) 
 						l = response2.split("\n")
+						
+						#removing redundant lines
 						if l[-3] == '\r' and l[-4] == '\r':
 							l.pop(-3)
 							l.pop(-3)
 						length = len(l)
+						
+						#printing parsed message
 						for b in range(1, length - 2):
 							print(l[b])
 						user_required_mail = int(input("\n\nWhich message do you want to read? [-1 to stop reading]\n"))
@@ -288,9 +304,12 @@ while True:
 			else:
 				uid = input("UID of mail(s) (space separated values if multiple to be deleted): ")
 				uid_list = [int(i) for i in uid.split()]
+				
+				#store command sets the delete flag of messages from uid_list
 				for u in uid_list:
-					command = store(u)
+					command = store(u)  
 					executeCommand(clientSocket, command)
+				#expunge deletes all those mails whose delete flag is set
 				command = expunge()
 				executed_command = executeCommand(clientSocket, command)
 
@@ -304,7 +323,7 @@ while True:
 						print("Can't delete that mail! Permission Denied!")
 
 		
-		elif choice == 11:
+		elif choice == 11: #list all the mailboxes available for that particular user
 			command = list_mailbox()
 			executed_command = executeCommand(clientSocket, command)
 
@@ -312,12 +331,13 @@ while True:
 				print(executed_command)
 			
 			else:
+				#parsing of names of mailboxes
 				temp = executed_command.split("\n")
 				ls = list()
 				for i in temp:
 					i = i.strip().split(" ")
-					ls.append(i[-1])
-				ls.pop()
+					ls.append(i[-1]) 
+				ls.pop()	#removing some redundant value which is not the name of mailbox
 
 				if "OK" in executed_command:
 					print("List of mailboxes:")
@@ -362,17 +382,20 @@ while True:
 			while message != ".":
 				message = input()
 				Message.append(message)
-			Message.pop()
+			Message.pop()        #removing "." which was also appended
 
 			serverName = '127.0.0.1'			
-			serverPort = 25
+			serverPort = 25 #Port for smtp
 
-			#clientSocket.close()
-
+			#No need to close connection on port 143 before establishing
+			#connection on port 25
+			
 			smtpSocket = create_connection((serverName, serverPort))
 			resp = smtpSocket.recv(2048).decode()
 			if conf.server_replies:
 				print(resp)
+				
+			#passing data in cmd1,2,3 as per required syntax
 			cmd1 = "MAIL FROM: " + user + "\r\n"
 			resp1 = executeCommand_smtp(smtpSocket, cmd1)
 			if conf.server_replies:
@@ -397,9 +420,8 @@ while True:
 				print("Mail sent Successfully!")
 			else:
 				print("Cannot send mail, Enter valid recipients")
-			#clientSocket = create_connection((serverName, serverPort))
 
-		elif choice == 14:
+		elif choice == 14: #Quit
 			print("Closing Email Client...\n")
 			break
 
@@ -411,42 +433,3 @@ while True:
 
 clientSocket.close()
 
-
-# elif choice == 3:
-# 	command = noop()
-
-# if subchoice == 101:
-# 	command = read_header_mail(uid)
-# elif subchoice == 102:
-# 	command = read_size_mail(uid)
-# elif subchoice == 103:
-# 	command = read_complete_mail(uid)
-
-# elif choice == 11:
-# 	command = check()
-
-# elif choice == 9:
-# 	mailbox = input("Name of mailbox: ")
-# 	command = examine(mailbox)
-
-# elif choice == 10:
-# 	mailbox = input("Name of mailbox: ")
-# 	subchoice = int(input("101.MESSAGES\t102.RECENT\t103.UIDNEXT\t104.UIDVALIDITY\t105.UNSEEN: "))
-# 	if subchoice == 101:
-# 	#no of messages in the mailbox
-# 		command = "STATUS " + mailbox + " (MESSAGES)\r\n"
-# 	elif subchoice == 102:
-# 	#no of messages with recent flag set
-# 		command = "STATUS " + mailbox + " (RECENT)\r\n"
-# 	elif subchoice == 103:
-# 	#next unique identifier of the mailbox
-# 		command = "STATUS " + mailbox + " (UIDNEXT)\r\n"
-# 	elif subchoice == 104:
-# 	#unique identifier value of the mailbox
-# 		command = "STATUS " + mailbox + " (UIDVALIDITY)\r\n"
-# 	elif subchoice == 105:
-# 	#no of messages which do not have seen flag set
-# 		command = "STATUS " + mailbox + " (UNSEEN)\r\n"
-
-# elif choice == 14:
-# 	command = expunge()
