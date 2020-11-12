@@ -3,9 +3,11 @@ import imghdr
 from email.message import EmailMessage
 import csv
 
-octetStreamFileTypes = ('.pdf', '.ppt', '.pptx', '.txt', '.py', '.odg', '.doc', '.docx', '.sh', '.c')
+# Tried to mention all octetStreamFiles that can be sent as attachments
+octetStreamFileTypes = ('.pdf', '.ppt', '.pptx', '.txt', '.py', '.odg', '.doc', '.docx', '.sh', '.c', '.cpp')
 
 def send_the_mail(From, To, Subject, Message, Password, Attachments):
+
     msg = EmailMessage()
     msg['Subject'] = Subject
     msg['From'] = From
@@ -25,8 +27,10 @@ def send_the_mail(From, To, Subject, Message, Password, Attachments):
 
     msg.set_content(Message)
 
+    # Adding all the attachments given in the config file.
+    # This for loop does not run when no attachments are given.
     for attachment in Attachments:
-        # print(attachment)
+
         with open(attachment, 'rb') as f:
             file_data = f.read()
             file_name = f.name
@@ -38,6 +42,7 @@ def send_the_mail(From, To, Subject, Message, Password, Attachments):
                 file_type = imghdr.what(f.name)
                 msg.add_attachment(file_data, maintype='image', subtype=file_type, filename=file_name)
 
+    # Opening a connection to smtp.gmail.com on port 465 with SSL to send mail
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(From, Password)
         smtp.send_message(msg)
