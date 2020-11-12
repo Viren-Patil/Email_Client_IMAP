@@ -16,9 +16,9 @@ resp = clientSocket.recv(2048).decode()
 
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
-	print("1.CAPABILITY        2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX       6.RENAME")
-	print("7.SELECT MAILBOX    8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
-	print("13.SMTP ON LOCALHOST")
+	print("1.CAPABILITY          2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX       6.RENAME")
+	print("7.SELECT MAILBOX      8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
+	print("13.SMTP ON LOCALHOST  14.QUIT")
 else:	
 	print("Sorry couldn't connect to the IMAP server!")
 	sys.exit()
@@ -72,17 +72,20 @@ while True:
 					print("Invalid User or Password!")
 
 				elif "BAD" in executed_command:
-					print("Try again!")
+					print("Try again! (Cannot login in logged in state)")
 
 
 		elif choice == 3:
 			command = logout()
+			logged_in = [None, False]
 			if conf.server_replies:
 				print(executeCommand(clientSocket, command))
 				print("Connection closed by foreign host.")
 			else:
 				print("Logging out! Bye! Connection closed")
-			break
+			clientSocket.close()
+			clientSocket = create_connection((serverName, serverPort))
+			continue
 
 
 		elif choice == 4:
