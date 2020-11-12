@@ -16,8 +16,8 @@ resp = clientSocket.recv(2048).decode()
 
 if 'OK' in resp:
 	print("Connected to the IMAP Server ...\nFollowing are the functionalities of this Email Client ...\n")
-	print("1.CAPABILITY          2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX       6.RENAME")
-	print("7.SELECT MAILBOX      8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES  12.SEND MAIL (SMTP)")
+	print("1.CAPABILITY          2.LOGIN              3.LOGOUT      4.CREATE             5.DELETE MAILBOX        6.RENAME")
+	print("7.SELECT MAILBOX      8.CLOSE MAILBOX      9.READING     10.DELETE MAIL(S)    11.LIST THE MAILBOXES   12.SEND MAIL (SMTP)")
 	print("13.SMTP ON LOCALHOST  14.QUIT")
 else:	
 	print("Sorry couldn't connect to the IMAP server!")
@@ -76,16 +76,19 @@ while True:
 
 
 		elif choice == 3:
-			command = logout()
-			logged_in = [None, False]
-			if conf.server_replies:
-				print(executeCommand(clientSocket, command))
-				print("Connection closed by foreign host.")
+			if logged_in[1] == False:
+				print("You are already logged out!")
 			else:
-				print("Logging out! Bye! Connection closed")
-			clientSocket.close()
-			clientSocket = create_connection((serverName, serverPort))
-			continue
+				command = logout()
+				logged_in = [None, False]
+				if conf.server_replies:
+					print(executeCommand(clientSocket, command))
+					print("Connection closed by foreign host.")
+				else:
+					print("Logging out! Bye! Connection closed")
+				clientSocket.close()
+				clientSocket = create_connection((serverName, serverPort))
+				continue
 
 
 		elif choice == 4:
@@ -218,7 +221,7 @@ while True:
 						mno = int(temp[1])
 						break
 						
-				user_required_no_mails = int(input(f"How many mails do you want to fetch?{[mno]} in your {selected_state[0]}\n"))
+				user_required_no_mails = int(input(f"How many mails do you want to fetch? ({mno} mails in your {selected_state[0]})\n"))
 				if user_required_no_mails > mno or user_required_no_mails < 1:
 					print(f"you can fetch upto {mno} mails only!") 
 					continue	
@@ -283,9 +286,11 @@ while True:
 			if selected_state[1] == False:
 				print("You have not selected an inbox")
 			else:
-				uid = int(input("UID of mail to be deleted: "))
-				command = store(uid)
-				executeCommand(clientSocket, command)
+				uid = input("UID of mail(s) (space separated values if multiple to be deleted): ")
+				uid_list = [int(i) for i in uid.split()]
+				for u in uid_list:
+					command = store(u)
+					executeCommand(clientSocket, command)
 				command = expunge()
 				executed_command = executeCommand(clientSocket, command)
 
@@ -393,6 +398,11 @@ while True:
 			else:
 				print("Cannot send mail, Enter valid recipients")
 			#clientSocket = create_connection((serverName, serverPort))
+
+		elif choice == 14:
+			print("Closing Email Client...\n")
+			break
+
 		else:
 			print("INVALID CHOICE!")
 	except Exception as err:
