@@ -5,7 +5,9 @@ import config as conf
 from smtp import *
 import getpass
 from tabulate import tabulate
-global mno #This variable maintains count of emails present in mailbox
+
+# This variable maintains count of emails present in mailbox
+global mno
 
 serverName = '127.0.0.1'
 serverPort = 143
@@ -23,9 +25,6 @@ else:
 
 logged_in = [None, False]
 selected_state = [None, False]
-login_state_commands = [1,3,4,5,6,7,8,9,10,11]
-selected_state_commands = [8,9,10]
-logout_state_commands = [1,2,3]
 
 while True:
 	try:
@@ -216,7 +215,7 @@ while True:
 						mno = int(temp[1])
 						break
 						
-				user_required_no_mails = int(input(f"How many mails do you want to fetch?{[mno]}\n"))
+				user_required_no_mails = int(input(f"How many mails do you want to fetch?{[mno]} in your {selected_state[0]}\n"))
 				if user_required_no_mails > mno or user_required_no_mails < 1:
 					print(f"you can fetch upto {mno} mails only!") 
 					continue	
@@ -268,10 +267,13 @@ while True:
 							print("Cc: ", Cc)
 						print("Date: ", Date) 
 						l = response2.split("\n")
+						if l[-3] == '\r' and l[-4] == '\r':
+							l.pop(-3)
+							l.pop(-3)
 						length = len(l)
 						for b in range(1, length - 2):
 							print(l[b])
-						user_required_mail = int(input("Which message do you want to read? [-1 to stop reading]\n"))
+						user_required_mail = int(input("\n\nWhich message do you want to read? [-1 to stop reading]\n"))
 					
 
 		elif choice == 10:

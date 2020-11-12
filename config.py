@@ -6,8 +6,8 @@ import sys
 server_replies = False
 
 login_credentials_for_imap = {
-    "username": "rutvik",
-    "password": "root"
+    "username": "",
+    "password": ""
 }
 
 # Make False if you provide credentials in the dict login_credentials_for_imap above
